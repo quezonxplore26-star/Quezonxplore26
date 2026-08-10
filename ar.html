@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>QuezonXplore — AR Camera Preview (Temporary)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,body{height:100%}
+      .camera-bg{background:#0f0f0f}
+      .video-fit{object-fit:cover}
+      .controls-backdrop{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+    </style>
+  </head>
+  <body class="camera-bg text-on-surface bg-background selection:bg-secondary selection:text-on-secondary">
+    <main class="h-screen w-screen relative overflow-hidden">
+      <video id="cameraVideo" autoplay playsinline class="absolute inset-0 h-full w-full video-fit"></video>
+
+      <div class="absolute top-4 left-4 z-40">
+        <a href="exhibits.html" class="inline-flex items-center gap-2 rounded-full border border-secondary/30 px-3 py-2 text-sm font-semibold text-secondary bg-surface-container-low">← Back</a>
+      </div>
+
+      <div id="fallback" class="hidden absolute inset-0 flex items-center justify-center z-30">
+        <div class="max-w-md text-center p-6 bg-surface-container-low/80 rounded-xl glass-panel">
+          <p class="mb-4 text-lg font-semibold">Camera not available</p>
+          <p class="text-sm text-on-surface-variant">This is a temporary AR preview page. Replace the placeholder media with the real Stitch assets when available.</p>
+        </div>
+      </div>
+
+      <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[92%] sm:w-auto sm:left-12 sm:-translate-x-0">
+        <div class="controls-backdrop glass-panel flex items-center gap-4 px-4 py-3 rounded-full border border-outline-variant/20">
+          <button id="captureBtn" class="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-on-secondary-container">Capture</button>
+          <button id="toggleBtn" class="inline-flex items-center gap-2 rounded-full bg-surface-container-low px-3 py-2 text-sm font-semibold text-on-surface">Toggle Camera</button>
+          <a id="placeholderModel" href="#" class="ml-2 inline-flex items-center gap-2 rounded-full bg-surface-container-low px-3 py-2 text-sm font-semibold text-on-surface">Open Placeholder Model</a>
+        </div>
+      </div>
+
+      <canvas id="snapshot" class="hidden"></canvas>
+    </main>
+
+    <script>
+      const video = document.getElementById('cameraVideo');
+      const fallback = document.getElementById('fallback');
+      const captureBtn = document.getElementById('captureBtn');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const snapshot = document.getElementById('snapshot');
+      const placeholderModel = document.getElementById('placeholderModel');
+
+      let stream = null;
+      let usingFront = false;
+
+      async function startCamera() {
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
+        const constraints = {
+          video: { facingMode: usingFront ? 'user' : { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        };
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          video.srcObject = stream;
+          video.play();
+          fallback.classList.add('hidden');
+        } catch (e) {
+          console.warn('Camera start failed', e);
+          fallback.classList.remove('hidden');
+        }
+      }
+
+      captureBtn.addEventListener('click', () => {
+        if (!stream) return;
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        snapshot.width = w;
+        snapshot.height = h;
+        const ctx = snapshot.getContext('2d');
+        ctx.drawImage(video, 0, 0, w, h);
+        const dataUrl = snapshot.toDataURL('image/jpeg');
+        // open captured image in new tab for quick verification
+        const win = window.open();
+        if (win) win.document.write(`<img src="${dataUrl}" style="max-width:100%">`);
+      });
+
+      toggleBtn.addEventListener('click', () => {
+        usingFront = !usingFront;
+        startCamera();
+      });
+
+      // placeholder link — replace with real Stitch model/viewer when available
+      placeholderModel.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Placeholder model — replace with real AR asset URL when available.');
+      });
+
+      // initialize
+      startCamera();
+
+      // cleanup on page hide
+      window.addEventListener('pagehide', () => {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+      });
+    </script>
+  </body>
+</html>
