@@ -221,14 +221,14 @@
             </div>
           </div>
 
-          <section id="detail-view" class="fixed inset-0 z-40 flex flex-col overflow-hidden bg-surface backdrop-blur-md opacity-0 pointer-events-none translate-y-full exhibit-transition md:flex-row">
-            <div class="relative h-[42vh] w-full overflow-hidden md:h-full md:w-1/2">
+          <section id="detail-view" class="fixed inset-0 z-40 flex flex-col overflow-hidden bg-surface backdrop-blur-md opacity-0 pointer-events-none exhibit-transition md:flex-row" style="transform: translateY(100%);">
+            <div class="relative h-[45vh] w-full overflow-hidden md:h-full md:w-1/2">
               <div id="detailImage" class="absolute inset-0 bg-cover bg-center exhibit-transition"></div>
               <div class="absolute inset-0 bg-gradient-to-r from-transparent to-surface md:block hidden"></div>
               <div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent md:hidden block"></div>
             </div>
 
-            <div class="flex h-[58vh] w-full flex-col justify-start overflow-y-auto bg-surface px-4 py-6 sm:px-6 sm:py-8 md:h-full md:w-1/2 md:justify-center md:px-xl md:py-xl">
+            <div class="flex h-[55vh] w-full flex-col justify-start overflow-y-auto bg-surface px-4 py-6 sm:px-6 sm:py-8 md:h-full md:w-1/2 md:justify-center md:px-xl md:py-xl">
               <div class="mb-6 flex justify-start">
                 <button class="inline-flex items-center gap-2 rounded-full border border-outline-variant/30 bg-surface-container-low px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-surface-container-high" onclick="closeExhibit()" aria-label="Back to exhibits">
                   <span class="material-symbols-outlined">arrow_back</span>
@@ -336,13 +336,15 @@
         detailImage.style.backgroundImage = `url('${item.image}')`;
         detailHighlights.innerHTML = item.highlights.map((line) => `<li>• ${line}</li>`).join('');
 
-        detailView.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-full');
-        detailView.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+        detailView.classList.remove('opacity-0', 'pointer-events-none');
+        detailView.classList.add('opacity-100', 'pointer-events-auto');
+        detailView.style.transform = 'translateY(0)';
       }
 
       function closeExhibit() {
-        detailView.classList.add('opacity-0', 'pointer-events-none', 'translate-y-full');
-        detailView.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+        detailView.classList.add('opacity-0', 'pointer-events-none');
+        detailView.classList.remove('opacity-100', 'pointer-events-auto');
+        detailView.style.transform = 'translateY(100%)';
       }
 
       document.querySelectorAll('[data-key]').forEach((card) => {
@@ -353,6 +355,13 @@
             openExhibit(card.dataset.key);
           }
         });
+      });
+
+      // Close detail view when clicking on the overlay (outside content)
+      detailView.addEventListener('click', (event) => {
+        if (event.target === detailView) {
+          closeExhibit();
+        }
       });
 
       document.querySelectorAll('.filter-btn').forEach((button) => {
